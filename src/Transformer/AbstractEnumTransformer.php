@@ -22,6 +22,7 @@ abstract class AbstractEnumTransformer extends AbstractTransformer
         if (!$data = $resource->getData()) {
             return null;
         }
+
         /** @var Enum $enumClass */
         $enumClass = $this->getEnumClass();
         if (!$enumClass::has($data)) {

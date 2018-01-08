@@ -93,6 +93,6 @@ class AbstractEnumTransformerCest
                 $resource = new ObjectItem($payload);
 
                 $transformer->untransform($resource);
-        });
+            });
     }
 }
