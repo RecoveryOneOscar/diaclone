@@ -7,7 +7,7 @@ use Diaclone\Exception\TransformException;
 use Diaclone\Resource\ResourceInterface;
 use MabeEnum\Enum;
 
-abstract class AbstractEnumTransformer extends AbstractTransformer
+abstract class AbstractEnumTransformer extends AbstractObjectTransformer
 {
     public function transform(ResourceInterface $resource)
     {
