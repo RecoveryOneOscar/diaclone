@@ -7,7 +7,7 @@ use Diaclone\Exception\TransformException;
 use Diaclone\Resource\ResourceInterface;
 use MabeEnum\Enum;
 
-abstract class AbstractEnumTransformer extends AbstractObjectTransformer
+abstract class AbstractEnumTransformer extends AbstractTransformer
 {
     public function transform(ResourceInterface $resource)
     {
@@ -30,6 +30,11 @@ abstract class AbstractEnumTransformer extends AbstractObjectTransformer
         }
 
         return $enumClass::byValue($data);
+    }
+
+    public function allowUntransform(ResourceInterface $resource): bool
+    {
+        return $resource->getData() ? true : false;
     }
 
     abstract public function getEnumClass(): string;
