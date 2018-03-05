@@ -18,4 +18,9 @@ abstract class AbstractObjectTransformer extends AbstractTransformer
     {
         return $this->untransform($resource);
     }
+
+    public function allowUntransform(ResourceInterface $resource): bool
+    {
+        return $resource->getData() ? true : false;
+    }
 }
