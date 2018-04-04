@@ -32,6 +32,11 @@ abstract class AbstractEnumTransformer extends AbstractTransformer
         return $enumClass::byValue($data);
     }
 
+    public function allowTransform(ResourceInterface $resource): bool
+    {
+        return $this->getPropertyValueFromResource($resource) ? true : false;
+    }
+    
     public function allowUntransform(ResourceInterface $resource): bool
     {
         return $resource->getData() ? true : false;
