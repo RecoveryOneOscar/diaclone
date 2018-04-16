@@ -1,16 +1,67 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Diaclone\Resource;
 
 use Diaclone\Exception\MalformedInputException;
 use Diaclone\Exception\TransformException;
 use Diaclone\Exception\UnrecognizedInputException;
+use Diaclone\Transformer\AbstractObjectTransformer;
 use Diaclone\Transformer\AbstractTransformer;
 use Exception;
 
 class ObjectItem extends Item
 {
+    /**
+     * @param AbstractObjectTransformer $transformer
+     * @return array|null
+     * @throws UnrecognizedInputException
+     */
+    public function transform(AbstractTransformer $transformer)
+    {
+        $mappedProperties = $transformer->getMappedProperties();
+        $response = [];
+
+        if ($propertyName = $this->getPropertyName()) {
+            $data = $transformer->getPropertyValue($this->getData(), $propertyName);
+        } else {
+            $data = $this->getData();
+        }
+
+        if (empty($data)) {
+            if ($transformer->returnNullOnEmpty()) {
+                return null;
+            } else {
+                $class = $transformer->getObjectClass();
+                $data = new $class();
+            }
+        }
+
+        $fieldMap = $this->fieldMap->isWildcard()
+            ? array_keys($mappedProperties)
+            : $this->fieldMap->getFieldsList();
+
+        // validate fields list
+        if ($diff = array_diff($fieldMap, array_keys($mappedProperties))) {
+            throw new UnrecognizedInputException($diff, $transformer);
+        }
+
+        foreach ($fieldMap as $property) {
+            $dataTypeClass = $transformer->getDataType($property);
+            $dataType = new $dataTypeClass($data, $property, $this->fieldMap->getField($property));
+
+            $propertyTransformerClass = $transformer->getPropertyTransformer($property);
+            /** @var AbstractTransformer $propertyTransformer */
+            $propertyTransformer = new $propertyTransformerClass();
+
+            if ($propertyTransformer->allowTransform($dataType)) {
+                $response[$mappedProperties[$property]] = $propertyTransformer->transform($dataType);
+            }
+        }
+
+        return $response;
+    }
+
     public function untransform(AbstractTransformer $transformer)
     {
         if ($this->getData() === null) {
@@ -46,17 +97,19 @@ class ObjectItem extends Item
                     throw $e;
                 } catch (TransformException $e) {
                     throw $e;
+                } catch (TransformException $e) {
+                    throw $e;
                 } catch (Exception $e) {
                     $malformedFields[] = $incomingProperty;
                 }
             }
         }
 
-        if (! empty($unrecognizedFields)) {
+        if (!empty($unrecognizedFields)) {
             throw new UnrecognizedInputException($unrecognizedFields, $transformer);
         }
 
-        if (! empty($malformedFields)) {
+        if (!empty($malformedFields)) {
             throw new MalformedInputException($malformedFields, $transformer);
         }
 
@@ -66,7 +119,7 @@ class ObjectItem extends Item
     protected function setPropertyValue($object, $property, $value)
     {
         // convert property to camelCase
-        $setter = 'set' . str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
+        $setter = 'set'.str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
         if (method_exists($object, $setter)) {
             $object->$setter($value);
 
@@ -79,7 +132,14 @@ class ObjectItem extends Item
             return;
         }
 
-        throw new TransformException(sprintf('You must either create a %s method in %s or add a public property', $setter, get_class($object), $property));
+        throw new TransformException(
+            sprintf(
+                'You must either create a %s method in %s or add a public property',
+                $setter,
+                get_class($object),
+                $property
+            )
+        );
     }
 
     protected function getDataType($transformer, string $property): string

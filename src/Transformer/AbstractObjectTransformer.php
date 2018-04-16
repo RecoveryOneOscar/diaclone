@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Diaclone\Transformer;
 
+use Diaclone\Resource\ObjectItem;
 use Diaclone\Resource\ResourceInterface;
 
 abstract class AbstractObjectTransformer extends AbstractTransformer
@@ -19,8 +20,13 @@ abstract class AbstractObjectTransformer extends AbstractTransformer
         return $this->untransform($resource);
     }
 
-    public function allowUntransform(ResourceInterface $resource): bool
+    public function returnNullOnEmpty(): bool
     {
-        return $resource->getData() ? true : false;
+        return false;
+    }
+
+    public function getDataType(string $property): string
+    {
+        return static::$dataTypes[$property] ?? ObjectItem::class;
     }
 }
