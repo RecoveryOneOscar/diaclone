@@ -29,4 +29,28 @@ class BooleanTransformer extends AbstractTransformer
         return $value;
         // throw new MalformedInputException($resource->getPropertyName(), 'must be boolean');
     }
+
+    public function getPropertyValue($data, $property)
+    {
+        if (empty($property)) {
+            return $data;
+        }
+
+        if (is_array($data)) {
+            return $data[$property] ?? null;
+        }
+
+        $is = 'is' . str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
+        if (method_exists($data, $is)) {
+            return $data->$is();
+        }
+
+        $getter = 'get' . str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
+        if (method_exists($data, $getter)) {
+            return $data->$getter();
+        }
+
+
+        return $data->$property ?? null;
+    }
 }
